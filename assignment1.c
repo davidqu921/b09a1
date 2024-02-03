@@ -24,7 +24,7 @@ void parse_arguments(int argc, char *argv[], int *samples, int *tdelay, int *sys
 void gather_system_info();
 void gather_memory_info(int samples,int tdelay)
 void gather_user_info();
-void gather_sequential_info(int samples);
+void gather_sequential_info(int samples,int tdelay);
 void display_usage();
 
 int main(int argc, char *argv[]) {
@@ -271,13 +271,13 @@ void print_each_sequential(int iterationTime){
 
 }
 
-void gather_sequential_info(int samples);{
+void gather_sequential_info(int samples,int tdelay);{
 	// sample times' iteration   
 	// ">" is all u need
     for (int i = 0; i < samples, i++)
     {
         print_each_sequential(i);
-
+        sleep(tdelay);
     }
 }
 
