@@ -272,13 +272,13 @@ void print_each_sequential(int iterationTime, int samples){
 }
 
 void gather_sequential_info(int samples,int tdelay);{
-	// sample times' iteration   
-	// ">" is all u need
-    for (int i = 0; i < samples, i++)
+    
+    int jelly;
+    for ( jelly = 0; jelly < samples ; jelly++)
     {
-        print_each_sequential(i,samples);
+        print_each_sequential(jelly,samples);
         
-        if (i < samples - 1) {
+        if (j < (samples - 1)) {
             sleep(tdelay);
         }
     }
