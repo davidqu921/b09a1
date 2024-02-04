@@ -192,8 +192,7 @@ void gather_system_info() {
 }
 
 void gather_memory_info(int samples,int tdelay) {
-    // Gather and display user information here
-    // This could include parsing /var/run/utmp for user sessions
+
 	struct sysinfo info;
 	sysinfo(&info);
 	printf("Nbr of samples: %d -- every %d secs\n",samples,tdelay);
@@ -284,6 +283,7 @@ void gather_sequential_info(int samples,int tdelay){
             sleep(tdelay);
         }
     }
+    gather_system_info();  // The last iteration will print System Information
 }
 
 void display_usage() {
