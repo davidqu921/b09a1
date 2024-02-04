@@ -1,7 +1,6 @@
 ##
 Assignment 1
 ##
-<---------------------------------------------------------------------------------------------------------------------------------->
 #Solving Obstacles
 1. The first problem I faced before developing anything on my program was the overwhelming C-libraries we probably wanted to include and
    use, trying to read through them is quite time-consuming, therefore I decided to focus on implementing its functionality, once I need
@@ -15,7 +14,8 @@ Assignment 1
    and Memory is printed with Tdelay, but my program prints all Memory in order, and then the Sessions/users. I find these extremely
    confusing and barely found anything to address this issue on the internet, I tried a couple of hours and gave up on these, but since the functionality is
    already fulfilled I don't think it is hurting my program in any way.
-----------------------------------------------------------------------------------------------------------------------------------
+
+
 #Overview of the Functions 
 void parse_arguments(int argc, char *argv[], int *samples, int *tdelay, int *system_flag, int *user_flag, int *sequential_flag);
   // Get and record the flags' state from user command line arguments
@@ -39,7 +39,8 @@ int getCPUCoreCount()
   // Function to get the number of CPU cores
 double getTotalCPUUsage()
   // Function to get the total CPU usage
-<---------------------------------------------------------------------------------------------------------------------------------->
+
+
 #Guide to Run
 => Directly running the program will print all information we can provide with default sample=10 and tdelay =1.
 => Running with command line arguments (order dose not matter):
