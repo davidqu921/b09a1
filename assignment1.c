@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-void parse_arguments(int argc, char *argv[], int *samples, int *tdelay, int *system_flag, int *user_flag, int *sequential_flag) {
+void parse_arguments(int argc, char *argv[], int *samples, int *tdelay, int *system_flag, int *user_flag, int *sequential_flag, int *graphics_flag) {
     if (argc == 1){
 		*user_flag = 1;
 		*system_flag = 1;
@@ -81,7 +81,11 @@ void parse_arguments(int argc, char *argv[], int *samples, int *tdelay, int *sys
 			} else if (strncmp(argv[i], "--tdelay=", 9) == 0) {
 				*tdelay = atoi(argv[i] + 9);
                 *system_flag = 1;
-			} else {
+			} 
+            else if (strcmp(argv[i], "--graphics") == 0) {
+				*graphics_flag = 1;
+			}
+            else {
 				printf("Unknown argument: %s\n", argv[i]);
 				display_usage();
 				exit(EXIT_FAILURE);
