@@ -22,7 +22,7 @@
 // Function prototypes
 void parse_arguments(int argc, char *argv[], int *samples, int *tdelay, int *system_flag, int *user_flag, int *sequential_flag);
 void gather_system_info();
-void gather_memory_info(int samples,int tdelay)
+void gather_memory_info(int samples,int tdelay);
 void gather_user_info();
 void gather_sequential_info(int samples,int tdelay);
 void display_usage();
@@ -36,13 +36,14 @@ int main(int argc, char *argv[]) {
 	
     // Validate arguments and decide on the action
     if (system_flag) {
-       
-		gather_memory_info(samples,tdelay)
-			if(user_flag == 1){
-				gather_user_info();
-				*user_flag = 0;
-			}
-		gather_system_info();
+       if(sequential_flag != 1){
+		    gather_memory_info(samples,tdelay);
+			    if(user_flag == 1){
+				    gather_user_info();
+				    user_flag = 0;
+			    }
+		    gather_system_info();
+        }
     }
     
     if (user_flag) {
@@ -70,10 +71,12 @@ void parse_arguments(int argc, char *argv[], int *samples, int *tdelay, int *sys
 				*user_flag = 1;
 			} else if (strcmp(argv[i], "--sequential") == 0) {
 				*sequential_flag = 1;
-			} else if (strncmp(argv[i], "--samples=", 9) == 0) {
-				*samples = atoi(argv[i] + 10);
-			} else if (strncmp(argv[i], "--tdelay=", 8) == 0) {
+			} else if (strncmp(argv[i], "--samples=", 10) == 0) {
+                *samples = atoi(argv[i] + 10);
+                *system_flag = 1;
+			} else if (strncmp(argv[i], "--tdelay=", 9) == 0) {
 				*tdelay = atoi(argv[i] + 9);
+                *system_flag = 1;
 			} else {
 				printf("Unknown argument: %s\n", argv[i]);
 				display_usage();
@@ -156,11 +159,10 @@ double getTotalCPUUsage() {
 void gather_system_info() {
     // Gather and display system information here
     long int time_in_seconds;
-	int days;
 	int core_num;
 	double percentage;
-	char *time_str[10];
-	char *day_str[50];
+	char time_str[10];
+	char day_str[50];
 	struct utsname uname_data;
     uname(&uname_data);
 	struct sysinfo info;
@@ -173,7 +175,7 @@ void gather_system_info() {
 	printf("Number of cores: %d\n", core_num);
 	printf("total cpu use = %.2f%%\n", percentage);
 	printf("---------------------------------------\n");
-	printf("### System Information ###")
+	printf("### System Information ###\n");
     printf("System Name = %s\n", uname_data.sysname);
     printf("Machine Name = %s\n", uname_data.nodename);
     printf("Version = %s\n", uname_data.version);
@@ -194,15 +196,15 @@ void gather_memory_info(int samples,int tdelay) {
     // This could include parsing /var/run/utmp for user sessions
 	struct sysinfo info;
 	sysinfo(&info);
-	printf("Nbr of samples: %d -- every %d secs\n",*samples,*tdelay);
+	printf("Nbr of samples: %d -- every %d secs\n",samples,tdelay);
 	printf("Memory usage: %ld kilobytes\n", (info.totalram-info.freeram)/1024);
 	printf("---------------------------------------\n");
-	printf("### Memory ### (Phys.Used/Tot -- Virtual Used/Tot) ");
+	printf("### Memory ### (Phys.Used/Tot -- Virtual Used/Tot)\n");
 	// Main loop for sampling 
     for (int i = 0; i < samples; i++) {
         // Gather and display stats here
-		printf("%ld GB / %ld GB  -- %ld GB / %ld GB\n", (info.totalram-info.freeram)/(1024 * 1024 * 1024),info.totalram/(1024 * 1024 * 1024),
-            (info.totalswap + info.ram - info.freeram -info.freeswap)/(1024 * 1024 * 1024),(info.totalswap + info.totalram)/(1024 * 1024 * 1024));
+		printf("%.2lf GB / %.2lf GB  -- %.2lf GB / %.2lf GB\n", (info.totalram-info.freeram)/(1024.0 * 1024 * 1024),info.totalram/(1024.0 * 1024 * 1024),
+            (info.totalswap + info.totalram - info.freeram -info.freeswap)/(1024.0 * 1024 * 1024),(info.totalswap + info.totalram)/(1024.0 * 1024 * 1024));
         // Wait for the next sample if not in the last iteration
         if (i < samples - 1) {
             sleep(tdelay);
@@ -249,8 +251,8 @@ void print_each_sequential(int iterationTime, int samples){
     for (int i = 0; i < samples; i++) {
        
         if (i == iterationTime){
-            printf("%ld GB / %ld GB  -- %ld GB / %ld GB\n", (info.totalram-info.freeram)/(1024 * 1024 * 1024),info.totalram/(1024 * 1024 * 1024),
-                (info.totalswap + info.ram - info.freeram -info.freeswap)/(1024 * 1024 * 1024),(info.totalswap + info.totalram)/(1024 * 1024 * 1024));
+            printf("%.2lf GB / %.2lf GB  -- %.2lf GB / %.2lf GB\n", (info.totalram-info.freeram)/(1024.0 * 1024 * 1024),info.totalram/(1024.0 * 1024 * 1024),
+                (info.totalswap + info.totalram - info.freeram -info.freeswap)/(1024.0 * 1024 * 1024),(info.totalswap + info.totalram)/(1024.0 * 1024 * 1024));
         }
 
         else if(i != iterationTime){
@@ -271,14 +273,14 @@ void print_each_sequential(int iterationTime, int samples){
 
 }
 
-void gather_sequential_info(int samples,int tdelay);{
+void gather_sequential_info(int samples,int tdelay){
     
     int jelly;
     for ( jelly = 0; jelly < samples ; jelly++)
     {
         print_each_sequential(jelly,samples);
         
-        if (j < (samples - 1)) {
+        if (jelly < (samples - 1)) {
             sleep(tdelay);
         }
     }
@@ -287,5 +289,4 @@ void gather_sequential_info(int samples,int tdelay);{
 void display_usage() {
     printf("Usage: ./program_name [--system] [--user] [--sequential] [--samples=N] [--tdelay=T]\n");
 }
-
 
