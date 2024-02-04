@@ -20,22 +20,23 @@
 #include <utmpx.h>
 
 // Function prototypes
-void parse_arguments(int argc, char *argv[], int *samples, int *tdelay, int *system_flag, int *user_flag, int *sequential_flag);
+void parse_arguments(int argc, char *argv[], int *samples, int *tdelay, int *system_flag, int *user_flag, int *sequential_flag， int *graphics_flag);
 void gather_system_info();
 void gather_memory_info(int samples,int tdelay);
 void gather_user_info();
 void gather_sequential_info(int samples,int tdelay);
 void display_usage();
+void gather_graphics_info(int samples,int tdelay);
 
 int main(int argc, char *argv[]) {
     int samples = 10, tdelay = 1; // Default values
-    int system_flag = 0, user_flag = 0, sequential_flag = 0;
+    int system_flag = 0, user_flag = 0, sequential_flag = 0, graphics_flag = 0 ;
 
     // Parse command-line arguments
-    parse_arguments(argc, argv, &samples, &tdelay, &system_flag, &user_flag, &sequential_flag);
+    parse_arguments(argc, argv, &samples, &tdelay, &system_flag, &user_flag, &sequential_flag, &graphics_flag);
 	
     // Validate arguments and decide on the action
-    if (system_flag) {
+    if (system_flag && graphics_flag == 0) {
        if(sequential_flag != 1){
 		    gather_memory_info(samples,tdelay);
 			    if(user_flag == 1){
@@ -46,14 +47,17 @@ int main(int argc, char *argv[]) {
         }
     }
     
-    if (user_flag) {
+    if (user_flag && graphics_flag == 0) {
         gather_user_info();
     }
 	
-	if(sequential_flag){
+	if(sequential_flag && graphics_flag == 0){
 		gather_sequential_info(samples,tdelay);
 	}
 
+    if (graphics_flag){
+        gather_graphics_info(samples,tdelay);
+    }
 
     return 0;
 }
@@ -191,6 +195,32 @@ void gather_system_info() {
     
 }
 
+void gather_system_info_noCore(){
+    // Gather and display system information here
+    long int time_in_seconds;
+	char time_str[10];
+	char day_str[50];
+	struct utsname uname_data;
+    uname(&uname_data);
+	struct sysinfo info;
+    sysinfo(&info);
+	
+	printf("### System Information ###\n");
+    printf("System Name = %s\n", uname_data.sysname);
+    printf("Machine Name = %s\n", uname_data.nodename);
+    printf("Version = %s\n", uname_data.version);
+    printf("Release = %s\n", uname_data.release);
+    printf("Architecture = %s\n", uname_data.machine);
+	
+	time_in_seconds = info.uptime;
+	convert_seconds_to_hms(time_in_seconds,time_str);
+	convert_seconds_to_dhms(time_in_seconds,day_str);
+	
+    printf("System running since last reboot: %s (%s)\n",day_str,time_str);
+    printf("---------------------------------------\n");
+}
+
+
 void gather_memory_info(int samples,int tdelay) {
 
 	struct sysinfo info;
@@ -201,6 +231,7 @@ void gather_memory_info(int samples,int tdelay) {
 	printf("### Memory ### (Phys.Used/Tot -- Virtual Used/Tot)\n");
 	// Main loop for sampling 
     for (int i = 0; i < samples; i++) {
+        sysinfo(&info);
         // Gather and display stats here
 		printf("%.2lf GB / %.2lf GB  -- %.2lf GB / %.2lf GB\n", (info.totalram-info.freeram)/(1024.0 * 1024 * 1024),info.totalram/(1024.0 * 1024 * 1024),
             (info.totalswap + info.totalram - info.freeram -info.freeswap)/(1024.0 * 1024 * 1024),(info.totalswap + info.totalram)/(1024.0 * 1024 * 1024));
@@ -250,6 +281,7 @@ void print_each_sequential(int iterationTime, int samples){
     for (int i = 0; i < samples; i++) {
        
         if (i == iterationTime){
+            sysinfo(&info);
             printf("%.2lf GB / %.2lf GB  -- %.2lf GB / %.2lf GB\n", (info.totalram-info.freeram)/(1024.0 * 1024 * 1024),info.totalram/(1024.0 * 1024 * 1024),
                 (info.totalswap + info.totalram - info.freeram -info.freeswap)/(1024.0 * 1024 * 1024),(info.totalswap + info.totalram)/(1024.0 * 1024 * 1024));
         }
@@ -283,7 +315,100 @@ void gather_sequential_info(int samples,int tdelay){
             sleep(tdelay);
         }
     }
-    gather_system_info();  // The last iteration will print System Information
+    gather_system_info_noCore();  // The last iteration will print System Information
+}
+
+// Function to print graphical representation for memory
+void print_memory_graph(double previous, double current) {
+    int change = (current - previous) * 100; // Assuming change is a percentage
+    if (change < 0) {
+        printf("::::::@ %d%%\n", change);
+    } else {
+        printf("######* +%d%%\n", change);
+    }
+}
+
+// Function to print graphical representation for CPU usage
+void print_cpu_graph(double usage) {
+    int bars = usage / 10; // Assuming each bar represents 10% CPU usage
+    for (int i = 0; i < bars; i++) {
+        printf("|");
+    }
+    printf(" %.2f%%\n", usage);
+}
+
+
+void gather_graphics_info(int samples,int tdelay){
+     // Gather and display system information here
+    long int time_in_seconds;
+	int core_num;
+	double percentage;
+	char time_str[10];
+	char day_str[50];
+	struct utsname uname_data;
+    uname(&uname_data);
+	struct sysinfo info;
+    sysinfo(&info);
+    double percentage_arr[samples];
+    
+    
+    struct sysinfo info;
+    sysinfo(&info);
+    double previous_memory_usage = (double)(info.totalram - info.freeram) / info.totalram;
+
+    printf("Nbr of samples: %d -- every %d secs\n", samples, tdelay);
+    printf("Memory usage: %ld kilobytes\n", (info.totalram - info.freeram) / 1024);
+    printf("---------------------------------------\n");
+    printf("### Memory ### (Phys.Used/Tot -- Virtual Used/Tot)\n");
+
+    for (int i = 0; i < samples; i++) {
+        sysinfo(&info);
+        double current_memory_usage = (double)(info.totalram - info.freeram) / info.totalram;
+
+        percentage_arr[i] = getTotalCPUUsage(); // recored current sample's cpu usage
+
+        printf("%.2lf GB / %.2lf GB  -- %.2lf GB / %.2lf GB   ", 
+            (info.totalram - info.freeram) / (1024.0 * 1024 * 1024), 
+            info.totalram / (1024.0 * 1024 * 1024),
+            (info.totalswap + info.totalram - info.freeram - info.freeswap) / (1024.0 * 1024 * 1024),
+            (info.totalswap + info.totalram) / (1024.0 * 1024 * 1024));
+
+        // Print graphical representation
+        print_memory_graph(previous_memory_usage, current_memory_usage);
+        previous_memory_usage = current_memory_usage;
+
+        if (i < samples - 1) {
+            sleep(tdelay);
+        }
+    }
+    printf("---------------------------------------\n");
+    gather_user_info();
+
+	
+	// Get core_num and percentage.
+	core_num = getCPUCoreCount();
+	percentage = getTotalCPUUsage();
+	
+	printf("Number of cores: %d\n", core_num);
+	printf("total cpu use = %.2f%%\n", percentage);
+    for(int i = 0; i < samples; i++){
+        print_cpu_graph(percentage_arr[i]);
+    }
+	printf("---------------------------------------\n");
+	printf("### System Information ###\n");
+    printf("System Name = %s\n", uname_data.sysname);
+    printf("Machine Name = %s\n", uname_data.nodename);
+    printf("Version = %s\n", uname_data.version);
+    printf("Release = %s\n", uname_data.release);
+    printf("Architecture = %s\n", uname_data.machine);
+	
+	time_in_seconds = info.uptime;
+	convert_seconds_to_hms(time_in_seconds,time_str);
+	convert_seconds_to_dhms(time_in_seconds,day_str);
+	
+    printf("System running since last reboot: %s (%s)\n",day_str,time_str);
+    printf("---------------------------------------\n");
+
 }
 
 void display_usage() {
