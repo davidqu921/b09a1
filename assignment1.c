@@ -396,6 +396,7 @@ void gather_graphics_info(int samples,int tdelay){
 	printf("Number of cores: %d\n", core_num);
 	printf("total cpu use = %.2f%%\n", percentage);
     for(int i = 0; i < samples; i++){
+        printf("%*c", 9, ' ');;
         print_cpu_graph(percentage_arr[i]);
     }
 	printf("---------------------------------------\n");
