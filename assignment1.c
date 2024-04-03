@@ -49,6 +49,7 @@ int main(int argc, char *argv[]) {
     
     if (user_flag && graphics_flag == 0) {
         gather_user_info();
+        gather_system_info_noCore();
     }
 	
 	if(sequential_flag && graphics_flag == 0){
@@ -85,6 +86,15 @@ void parse_arguments(int argc, char *argv[], int *samples, int *tdelay, int *sys
             else if (strcmp(argv[i], "--graphics") == 0) {
 				*graphics_flag = 1;
 			}
+            else if (isdigit(argv[i])){
+                if (*samples == 10){
+                    *samples = strtol(argv[i], NULL, 10);
+                    *system_flag = 1;
+                }
+                else if (*tdelay == 1){
+                    *tdelay = argv[i];
+                }
+            }
             else {
 				printf("Unknown argument: %s\n", argv[i]);
 				display_usage();
