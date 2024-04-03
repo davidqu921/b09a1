@@ -28,6 +28,7 @@ void gather_sequential_info(int samples,int tdelay);
 void display_usage();
 void gather_graphics_info(int samples,int tdelay);
 
+
 int main(int argc, char *argv[]) {
     int samples = 10, tdelay = 1; // Default values
     int system_flag = 0, user_flag = 0, sequential_flag = 0, graphics_flag = 0 ;
@@ -63,6 +64,15 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+bool isAllDigit(char str[]){
+    int isInt = 1;
+    for (int i = 0; str[i] != '\0'; ++i) {
+        if (!isdigit(str[i])) {
+            isInteger = 0; // Not an integer
+            break;
+        }
+    }
+}
 void parse_arguments(int argc, char *argv[], int *samples, int *tdelay, int *system_flag, int *user_flag, int *sequential_flag, int *graphics_flag) {
     if (argc == 1){
 		*user_flag = 1;
@@ -86,13 +96,13 @@ void parse_arguments(int argc, char *argv[], int *samples, int *tdelay, int *sys
             else if (strcmp(argv[i], "--graphics") == 0) {
 				*graphics_flag = 1;
 			}
-            else if (isdigit(argv[i])){
+            else if (isAllDigit(argv[i])){
                 if (*samples == 10){
                     *samples = strtol(argv[i], NULL, 10);
                     *system_flag = 1;
                 }
                 else if (*tdelay == 1){
-                    *tdelay = argv[i];
+                    *tdelay = strtol(argv[i], NULL, 10);
                 }
             }
             else {
